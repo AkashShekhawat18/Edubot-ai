@@ -1,0 +1,10 @@
+# Byte-compiled / caches
+__pycache__/
+*.pyc
+
+# Local virtualenvs and env files
+AI_Module/venv/.env
+
+# OS files
+.DS_Store
+Thumbs.db

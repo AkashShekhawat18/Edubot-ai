@@ -1,202 +1,213 @@
-# EduBot API Documentation
+# EduBot Backend API Documentation
 
 **Base URL:** `http://localhost:5000`
 
-All responses use a consistent JSON envelope:
+All endpoints are versioned under `/api/v1`.
+
+## Response contract
+
+Success:
 
 ```json
 {
-    "status": "success" | "error",
-    "message": "...",
-    ...additional fields
+  "success": true,
+  "data": { ... }
+}
+```
+
+Failure:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable message"
+  }
 }
 ```
 
 ---
 
-## 1. POST /login
+## 1. POST /api/v1/auth/login
 
-Authenticate a user and retrieve their profile.
+Authenticate a user and return a bearer token.
 
-### Headers
+### Request
 
-| Header | Value |
-|---|---|
-| Content-Type | application/json |
+Headers:
+- `Content-Type: application/json`
 
-### Request Body
+Body:
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| username | string | Yes | The user's username |
-| password | string | Yes | The user's password |
+```json
+{ "username": "teacher1", "password": "password123" }
+```
 
-### Responses
+### Response
 
 #### 200 — Success
 
 ```json
 {
-    "status": "success",
-    "message": "Login successful",
-    "user": {
-        "id": 1,
-        "username": "teacher1",
-        "role": "teacher"
-    }
+  "success": true,
+  "data": {
+    "user": {"id": 1, "username": "teacher1", "role": "teacher"},
+    "token": "<auth-token>"
+  }
 }
 ```
 
-#### 400 — Missing Fields
+#### 401 — Invalid credentials
 
 ```json
 {
-    "status": "error",
-    "message": "Missing required fields: username, password"
+  "success": false,
+  "error": {
+    "code": "AUTHENTICATION_ERROR",
+    "message": "Invalid username or password"
+  }
 }
-```
-
-#### 401 — Invalid Credentials
-
-```json
-{
-    "status": "error",
-    "message": "Invalid credentials"
-}
-```
-
-### Example Request
-
-```bash
-curl -X POST http://localhost:5000/login \
-  -H "Content-Type: application/json" \
-  -d '{"username": "teacher1", "password": "password123"}'
 ```
 
 ---
 
-## 2. POST /upload
+## 2. POST /api/v1/chat
 
-Upload a PDF file and store its metadata.
+Send a tutoring question to the AI adapter.
 
-### Headers
+### Request
 
-| Header | Value |
-|---|---|
-| Content-Type | multipart/form-data |
+Headers:
+- `Content-Type: application/json`
+- `Authorization: Bearer <token>` (future protected endpoint)
 
-### Request Body (form-data)
+Body:
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| file | file | Yes | A PDF file (max 16 MB) |
+```json
+{ "question": "Explain Newton's second law." }
+```
 
-### Responses
+### Response
 
-#### 201 — Success
+#### 200 — Success
 
 ```json
 {
-    "status": "success",
-    "message": "File uploaded successfully",
+  "success": true,
+  "data": {
+    "response": "This is a placeholder AI response. Replace the adapter with a production AI provider."
+  }
+}
+```
+
+#### 400 — Validation error
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "question: field required"
+  }
+}
+```
+
+---
+
+## 3. POST /api/v1/upload
+
+Upload a PDF for later ingestion and metadata recording.
+
+### Request
+
+Headers:
+- `Content-Type: multipart/form-data`
+
+Body:
+- `file` — PDF file payload
+
+### Response
+
+#### 201 — Accepted
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "accepted",
     "book": {
-        "id": 1,
-        "filename": "physics_chapter1.pdf",
-        "upload_date": "2026-05-29T17:00:00+00:00"
+      "id": 1,
+      "filename": "sample.pdf",
+      "upload_date": "2026-06-01T12:00:00Z"
     }
+  }
 }
 ```
 
-#### 400 — No File Provided
+#### 400 — Invalid file
 
 ```json
 {
-    "status": "error",
-    "message": "No file provided"
+  "success": false,
+  "error": {
+    "code": "UPLOAD_ERROR",
+    "message": "Only PDF uploads are allowed"
+  }
 }
-```
-
-#### 400 — Invalid File Type
-
-```json
-{
-    "status": "error",
-    "message": "Only PDF files are allowed"
-}
-```
-
-#### 413 — File Too Large
-
-```json
-{
-    "status": "error",
-    "message": "File too large. Maximum size is 16 MB"
-}
-```
-
-### Example Request
-
-```bash
-curl -X POST http://localhost:5000/upload \
-  -F "file=@/path/to/document.pdf"
 ```
 
 ---
 
-## 3. POST /chat
+## 4. POST /api/v1/paper/generate
 
-Send a question to the chatbot and receive a response.
+Generate a question paper through the AI integration layer.
 
-### Headers
+### Request
 
-| Header | Value |
-|---|---|
-| Content-Type | application/json |
+Headers:
+- `Content-Type: application/json`
 
-### Request Body
+Body:
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| question | string | Yes | The question to ask the chatbot |
+```json
+{ "topic": "Cell Biology", "num_questions": 5 }
+```
 
-### Responses
+### Response
 
 #### 200 — Success
 
 ```json
 {
-    "status": "success",
-    "response": "The answer to your question is..."
+  "success": true,
+  "data": {
+    "paper": {
+      "topic": "Cell Biology",
+      "num_questions": 5,
+      "paper": [ ... ]
+    }
+  }
 }
-```
-
-#### 400 — Missing Field
-
-```json
-{
-    "status": "error",
-    "message": "Missing required field: question"
-}
-```
-
-#### 500 — Service Unavailable
-
-```json
-{
-    "status": "error",
-    "message": "Chatbot service unavailable"
-}
-```
-
-### Example Request
-
-```bash
-curl -X POST http://localhost:5000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What is Newton'\''s second law?"}'
 ```
 
 ---
+
+## 5. GET /api/v1/health
+
+Healthcheck endpoint for monitoring.
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok",
+    "version": null
+  }
+}
+```
 
 ## 4. POST /generate-paper
 

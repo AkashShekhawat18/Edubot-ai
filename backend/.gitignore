@@ -1,6 +1,18 @@
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
+
+# Local database files
 *.db
+*.sqlite3
+
+# Uploads and user files
 uploads/
+
+# dotenv
 .env
+.env.local
+
+# Test and cache
+.pytest_cache/
+

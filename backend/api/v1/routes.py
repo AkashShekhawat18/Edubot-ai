@@ -24,13 +24,17 @@ def login():
 @api_v1.route("/chat", methods=["POST"])
 def chat():
     payload = request.get_json(silent=True)
+
+    print("TYPE =", type(payload))
+    print("PAYLOAD =", payload)
+
     if payload is None:
         raise AppValidationError("Request body must be valid JSON")
 
     chat_data = ChatRequest(**payload)
     response = current_app.chat_service.ask_question(chat_data.question)
-    return success_response({"response": response})
 
+    return success_response({"response": response})
 
 @api_v1.route("/upload", methods=["POST"])
 def upload():

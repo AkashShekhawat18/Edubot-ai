@@ -14,6 +14,7 @@ from backend.repositories.db import initialize_database
 from backend.repositories.user_repository import UserRepository
 from backend.services.auth_service import AuthService
 from backend.services.chat_service import ChatService
+from backend.services.math_service import MathService
 from backend.services.paper_service import PaperService
 from backend.services.upload_service import UploadService
 
@@ -39,6 +40,7 @@ def create_app() -> Flask:
 
     app.auth_service = AuthService(user_repo, settings)
     app.chat_service = ChatService(ai_service)
+    app.math_service = MathService(ai_service)
     app.paper_service = PaperService(ai_service)
     app.upload_service = UploadService(book_repo, ai_service, settings)
 

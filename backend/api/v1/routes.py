@@ -53,7 +53,21 @@ def generate_paper():
     result = current_app.paper_service.generate(paper_data.topic, paper_data.num_questions)
     return success_response({"paper": result})
 
+@api_v1.route("/math", methods=["POST"])
+def math():
 
+    payload = request.get_json(silent=True)
+
+    if payload is None:
+        raise AppValidationError("Request body must be valid JSON")
+
+    question = payload["question"]
+
+    response = current_app.math_service.solve(question)
+
+    return success_response({
+        "response": response
+    })
 @api_v1.route("/health", methods=["GET"])
 def health():
     health_payload = HealthResponse(status="ok", version=None)
